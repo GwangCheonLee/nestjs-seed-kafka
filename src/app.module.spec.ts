@@ -3,7 +3,6 @@ import {INestApplication} from '@nestjs/common';
 import {AppModule} from './app.module';
 import {ConfigService} from '@nestjs/config';
 import {TypeOrmModule} from '@nestjs/typeorm';
-import {User} from './users/entities/user.entity';
 import {DataSource} from 'typeorm';
 import {setupDataSource} from '../jest/setup';
 
@@ -19,10 +18,10 @@ describe('AppModule', () => {
         AppModule,
         TypeOrmModule.forRoot({
           type: 'postgres',
-          entities: [User],
+          entities: [],
           synchronize: true,
         }),
-        TypeOrmModule.forFeature([User]),
+        TypeOrmModule.forFeature([]),
       ],
     })
       .overrideProvider(DataSource)
