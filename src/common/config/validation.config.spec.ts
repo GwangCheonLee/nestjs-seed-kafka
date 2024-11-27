@@ -1,61 +1,6 @@
 // Sample DTO for testing
-import {BadRequestException, ValidationPipe} from '@nestjs/common';
 import * as Joi from 'joi';
-import {
-  validationPipeConfig,
-  validationSchemaConfig,
-} from './validation.config';
-import {IsString} from 'class-validator';
-
-class TestDto {
-  @IsString()
-  allowedProp!: string;
-}
-
-describe('ValidationPipe Configuration', () => {
-  let pipe: ValidationPipe;
-
-  beforeEach(() => {
-    pipe = new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: false,
-    });
-  });
-
-  it('should strip properties not included in the DTO (whitelist)', async () => {
-    const testDto = {allowedProp: 'value', notAllowedProp: 'value'};
-    const transformedDto = await pipe.transform(testDto, {
-      type: 'body',
-      metatype: TestDto,
-    });
-
-    expect(transformedDto).toEqual({allowedProp: 'value'});
-  });
-
-  it('should throw an error for properties not listed in the DTO (forbidNonWhitelisted)', async () => {
-    pipe = validationPipeConfig();
-    const testDto = {notAllowedProp: 'value'};
-
-    await expect(
-      pipe.transform(testDto, {
-        type: 'body',
-        metatype: TestDto,
-      }),
-    ).rejects.toThrow(BadRequestException);
-  });
-
-  it('should transform payload according to the metatype (transform)', async () => {
-    const testDto = {allowedProp: 123};
-
-    await expect(
-      pipe.transform(testDto, {
-        type: 'body',
-        metatype: TestDto,
-      }),
-    ).rejects.toThrow(BadRequestException);
-  });
-});
+import {validationSchemaConfig} from './validation.config';
 
 describe('Joi Validation Schema Configuration', () => {
   let schema: Joi.ObjectSchema;

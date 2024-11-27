@@ -1,17 +1,4 @@
-import {ValidationPipe} from '@nestjs/common';
 import * as Joi from 'joi';
-
-/**
- * Generates a ValidationPipe configuration
- * @return {ValidationPipe} Configured instance of ValidationPipe
- */
-export const validationPipeConfig = (): ValidationPipe => {
-  return new ValidationPipe({
-    whitelist: true,
-    transform: true,
-    forbidNonWhitelisted: true,
-  });
-};
 
 /**
  * Defines a Joi validation schema for environment variables
@@ -28,5 +15,17 @@ export const validationSchemaConfig = (): Joi.ObjectSchema => {
     DB_USER_PASSWORD: Joi.string().required(),
     JWT_ACCESS_TOKEN_SECRET: Joi.string().required(),
     JWT_ACCESS_TOKEN_EXPIRATION_TIME: Joi.number().required(),
+    KAFKA_BROKERS: Joi.string().required(),
+    KAFKA_CONSUMER_GROUP_ID: Joi.string().required(),
+    KAFKA_AUTO_COMMIT: Joi.boolean().default(false),
+    KAFKA_ALLOW_AUTO_TOPIC_CREATION: Joi.boolean().default(false),
+    KAFKA_FAILOVER_WEBHOOK_ENABLED: Joi.boolean().default(false),
+    KAFKA_FAILOVER_WEBHOOK_URL: Joi.string()
+      .uri()
+      .when('KAFKA_FAILOVER_WEBHOOK_ENABLED', {
+        is: true,
+        then: Joi.required(),
+        otherwise: Joi.optional(),
+      }),
   });
 };
