@@ -7,6 +7,8 @@ import {
 } from '@nestjs/microservices';
 import {KafkaMessageContext} from '../interfaces/kafka-message-context.interface';
 import {KafkaFailoverService} from '../failover/kafka-failover.service';
+import {UserRegistrationMessage} from '../../users/interfaces/user-registration-message.interface';
+import {KafkaConsumerService} from './kafka-consumer.service';
 
 /**
  * Kafka 컨슈머 컨트롤러
@@ -17,28 +19,41 @@ import {KafkaFailoverService} from '../failover/kafka-failover.service';
 export class KafkaConsumerController {
   private readonly logger = new Logger(KafkaConsumerController.name);
 
-  constructor(private readonly kafkaFailoverService: KafkaFailoverService) {}
+  constructor(
+    private readonly kafkaConsumerService: KafkaConsumerService,
+    private readonly kafkaFailoverService: KafkaFailoverService,
+  ) {}
 
   /**
    * 'user.registration.event' 토픽에서 메시지를 처리합니다.
    *
-   * @param {object} message 수신된 메시지 본문
+   * @param {UserRegistrationMessage} message 수신된 메시지 본문
    * @param {KafkaContext} context Kafka 메시지 컨텍스트
    */
   @MessagePattern('user.registration.event')
   async handleUserRegistration(
-    @Payload() message: object,
+    @Payload() message: UserRegistrationMessage,
     @Ctx() context: KafkaContext,
   ) {
-    const consumer = context.getConsumer();
-    const topic = context.getTopic();
     const {offset} = context.getMessage();
     const partition = context.getPartition();
+    const topic = context.getTopic();
+    const consumer = context.getConsumer();
 
     try {
-      this.logger.log(`Received user registration: ${JSON.stringify(message)}`);
+      this.logger.log(
+        `Received user registration: ${JSON.stringify(message)} of topic ${topic}`,
+      );
 
-      await consumer.commitOffsets([{topic, partition, offset}]);
+      await this.kafkaConsumerService.processUserRegistrationEvent(message);
+
+      await consumer.commitOffsets([
+        {topic, partition, offset: (BigInt(offset) + 1n).toString()},
+      ]);
+
+      console.log('commit offset');
+      console.log({topic, partition, offset});
+
       this.logger.log(
         `Successfully processed message at offset ${offset} in partition ${partition} of topic ${topic}`,
       );
